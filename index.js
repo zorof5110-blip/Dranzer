@@ -1,4 +1,5 @@
 
+require("dotenv").config();
 const { Client, GatewayIntentBits } = require("discord.js");
 
 const client = new Client({
@@ -9,15 +10,28 @@ const client = new Client({
   ]
 });
 
+/* ===== READY ===== */
 client.once("ready", () => {
   console.log(`🟢 Bot online as ${client.user.tag}`);
 });
 
-client.on("messageCreate", (message) => {
+/* ===== MESSAGE HANDLER ===== */
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+
   if (message.content === "ping") {
-    message.reply("pong 🟢");
+    await message.reply("pong 🟢");
   }
 });
 
-// VERY IMPORTANT
+/* ===== ERROR SAFETY (IMPORTANT FOR 24/7) ===== */
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled promise rejection:", error);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+});
+
+/* ===== LOGIN ===== */
 client.login(process.env.TOKEN);
