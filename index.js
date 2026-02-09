@@ -1,37 +1,53 @@
 
-require("dotenv").config();
-const { Client, GatewayIntentBits } = require("discord.js");
+const { 
+  Client, 
+  GatewayIntentBits, 
+  REST, 
+  Routes, 
+  SlashCommandBuilder 
+} = require("discord.js");
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildVoiceStates
   ]
 });
 
-/* ===== READY ===== */
+// SLASH COMMAND REGISTER
+const commands = [
+  new SlashCommandBuilder()
+    .setName("ping")
+    .setDescription("Replies with Pong 🟢")
+].map(cmd => cmd.toJSON());
+
+const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+
+(async () => {
+  try {
+    console.log("🔁 Registering slash commands...");
+    await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      { body: commands }
+    );
+    console.log("✅ Slash commands registered");
+  } catch (err) {
+    console.error(err);
+  }
+})();
+
 client.once("ready", () => {
-  console.log(`🟢 Bot online as ${client.user.tag}`);
+  console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-/* ===== MESSAGE HANDLER ===== */
-client.on("messageCreate", async (message) => {
-  if (message.author.bot) return;
+client.on("interactionCreate", async interaction => {
+  if (!interaction.isChatInputCommand()) return;
 
-  if (message.content === "ping") {
-    await message.reply("pong 🟢");
+  if (interaction.commandName === "ping") {
+    await interaction.reply("pong 🟢");
   }
 });
 
-/* ===== ERROR SAFETY (IMPORTANT FOR 24/7) ===== */
-process.on("unhandledRejection", (error) => {
-  console.error("Unhandled promise rejection:", error);
-});
-
-process.on("uncaughtException", (error) => {
-  console.error("Uncaught exception:", error);
-});
-
-/* ===== LOGIN ===== */
 client.login(process.env.TOKEN);
