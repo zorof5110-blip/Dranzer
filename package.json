@@ -1,18 +1,13 @@
+
 {
   "name": "discord-bot",
   "version": "1.0.0",
-  "description": "24/7 Discord bot",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
-  },
-  "engines": {
-    "node": ">=18.x"
+    "start": "node index.js"
   },
   "dependencies": {
-    "discord.js": "^14.14.1",
-    "dotenv": "^16.4.5"
+    "discord.js": "^14.14.1"
   }
 }
