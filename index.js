@@ -51,3 +51,23 @@ client.on("interactionCreate", async interaction => {
 });
 
 client.login(process.env.TOKEN);
+const { joinVoiceChannel } = require("@discordjs/voice");
+
+client.on("interactionCreate", async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === "join") {
+    const channel = interaction.member.voice.channel;
+    if (!channel) {
+      return interaction.reply("❌ Join a voice channel first");
+    }
+
+    joinVoiceChannel({
+      channelId: channel.id,
+      guildId: channel.guild.id,
+      adapterCreator: channel.guild.voiceAdapterCreator,
+    });
+
+    interaction.reply("🔊 Joined voice channel");
+  }
+});
