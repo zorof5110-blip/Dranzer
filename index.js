@@ -1,26 +1,38 @@
-
-const { 
-  Client, 
-  GatewayIntentBits, 
-  REST, 
-  Routes, 
-  SlashCommandBuilder 
+const {
+  Client,
+  GatewayIntentBits,
+  REST,
+  Routes,
+  SlashCommandBuilder
 } = require("discord.js");
+
+const {
+  joinVoiceChannel,
+  createAudioPlayer,
+  createAudioResource,
+  AudioPlayerStatus
+} = require("@discordjs/voice");
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildVoiceStates
   ]
 });
 
-// SLASH COMMAND REGISTER
+// ===== SLASH COMMANDS =====
 const commands = [
   new SlashCommandBuilder()
     .setName("ping")
-    .setDescription("Replies with Pong 🟢")
+    .setDescription("Replies with Pong 🟢"),
+
+  new SlashCommandBuilder()
+    .setName("join")
+    .setDescription("Join your voice channel"),
+
+  new SlashCommandBuilder()
+    .setName("play")
+    .setDescription("Play music in voice channel")
 ].map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
@@ -38,6 +50,9 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
   }
 })();
 
+let connection;
+let player;
+
 client.once("ready", () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
@@ -45,29 +60,59 @@ client.once("ready", () => {
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
+  // ===== PING =====
   if (interaction.commandName === "ping") {
-    await interaction.reply("pong 🟢");
+    return interaction.reply("pong 🟢");
   }
-});
 
-client.login(process.env.TOKEN);
-const { joinVoiceChannel } = require("@discordjs/voice");
-
-client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-
+  // ===== JOIN =====
   if (interaction.commandName === "join") {
     const channel = interaction.member.voice.channel;
+
     if (!channel) {
-      return interaction.reply("❌ Join a voice channel first");
+      return interaction.reply({
+        content: "❌ Join a voice channel first",
+        ephemeral: true
+      });
     }
 
-    joinVoiceChannel({
+    connection = joinVoiceChannel({
       channelId: channel.id,
       guildId: channel.guild.id,
       adapterCreator: channel.guild.voiceAdapterCreator,
     });
 
-    interaction.reply("🔊 Joined voice channel");
+    return interaction.reply("🔊 Joined voice channel");
+  }
+
+  // ===== PLAY =====
+  if (interaction.commandName === "play") {
+    const channel = interaction.member.voice.channel;
+
+    if (!channel) {
+      return interaction.reply({
+        content: "❌ Join a voice channel first",
+        ephemeral: true
+      });
+    }
+
+    // join if not already connected
+    if (!connection) {
+      connection = joinVoiceChannel({
+        channelId: channel.id,
+        guildId: channel.guild.id,
+        adapterCreator: channel.guild.voiceAdapterCreator,
+      });
+    }
+
+    player = createAudioPlayer();
+    const resource = createAudioResource("./sound.mp3");
+
+    connection.subscribe(player);
+    player.play(resource);
+
+    interaction.reply("🎵 Playing music!");
   }
 });
+
+client.login(process.env.TOKEN);
