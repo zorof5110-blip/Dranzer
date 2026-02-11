@@ -15,7 +15,8 @@ const {
   createAudioResource,
   NoSubscriberBehavior,
   entersState,
-  VoiceConnectionStatus
+  VoiceConnectionStatus,
+  StreamType
 } = require("@discordjs/voice");
 
 const ytdl = require("@distube/ytdl-core");
@@ -101,8 +102,10 @@ client.on("messageCreate", async (message) => {
       highWaterMark: 1 << 25
     });
 
-    const resource = createAudioResource(stream);
-
+   const resource = createAudioResource(stream, {
+  inputType: StreamType.Arbitrary,
+});
+    
     connection.subscribe(player);
     player.play(resource);
 
