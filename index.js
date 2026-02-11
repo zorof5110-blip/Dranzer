@@ -1,135 +1,118 @@
+require("dotenv").config();
+
 const {
   Client,
-  GatewayIntentBits,
-  REST,
-  Routes,
-  SlashCommandBuilder
+  GatewayIntentBits
 } = require("discord.js");
 
 const {
   joinVoiceChannel,
   createAudioPlayer,
   createAudioResource,
-  AudioPlayerStatus
+  NoSubscriberBehavior,
+  entersState,
+  VoiceConnectionStatus
 } = require("@discordjs/voice");
+
+const ytdl = require("@distube/ytdl-core");
+const ffmpeg = require("ffmpeg-static");
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildVoiceStates
   ]
 });
 
-// ===== SLASH COMMANDS =====
-const commands = [
-  new SlashCommandBuilder()
-    .setName("ping")
-    .setDescription("Replies with Pong 🟢"),
-
-  new SlashCommandBuilder()
-    .setName("join")
-    .setDescription("Join your voice channel"),
-
-  new SlashCommandBuilder()
-    .setName("play")
-    .setDescription("Play music in voice channel")
-].map(cmd => cmd.toJSON());
-
-
-(async () => {
-  try {
-    console.log("🔁 Registering slash commands...");
-    await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: commands }
-    );
-    console.log("✅ Slash commands registered");
-  } catch (err) {
-    console.error(err);
-  }
-})();
-
+const prefix = "?";
 let connection;
 let player;
 
 client.once("ready", () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
+  console.log(`Logged in as ${client.user.tag}`);
 });
 
-client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
+client.on("messageCreate", async (message) => {
+  if (!message.content.startsWith(prefix) || message.author.bot) return;
 
-  // ===== PING =====
-  if (interaction.commandName === "ping") {
-    return interaction.reply("pong 🟢");
+  const args = message.content.slice(prefix.length).trim().split(/ +/);
+  const command = args.shift().toLowerCase();
+
+  // ?ping
+  if (command === "ping") {
+    return message.reply("Pong 🟢");
   }
 
-  // ===== JOIN =====
-  if (interaction.commandName === "join") {
-    const channel = interaction.member.voice.channel;
-
-    if (!channel) {
-      return interaction.reply({
-        content: "❌ Join a voice channel first",
-        ephemeral: true
-      });
-    }
+  // ?join (24/7 stay)
+  if (command === "join") {
+    if (!message.member.voice.channel)
+      return message.reply("Join a voice channel first!");
 
     connection = joinVoiceChannel({
-      channelId: channel.id,
-      guildId: channel.guild.id,
-      adapterCreator: channel.guild.voiceAdapterCreator,
+      channelId: message.member.voice.channel.id,
+      guildId: message.guild.id,
+      adapterCreator: message.guild.voiceAdapterCreator,
+      selfDeaf: false
     });
 
-    return interaction.reply("🔊 Joined voice channel");
+    message.reply("Joined and staying 24/7 🔊");
+
+    connection.on("stateChange", async (_, newState) => {
+      if (newState.status === VoiceConnectionStatus.Disconnected) {
+        try {
+          await entersState(connection, VoiceConnectionStatus.Connecting, 5000);
+        } catch {
+          connection.destroy();
+        }
+      }
+    });
   }
 
-  // ===== PLAY =====
-  if (interaction.commandName === "play") {
-    const channel = interaction.member.voice.channel;
+  // ?play <youtube link>
+  if (command === "play") {
+    if (!message.member.voice.channel)
+      return message.reply("Join a voice channel first!");
 
-    if (!channel) {
-      return interaction.reply({
-        content: "❌ Join a voice channel first",
-        ephemeral: true
-      });
-    }
+    if (!args[0]) return message.reply("Provide a YouTube link!");
 
-    // join if not already connected
     if (!connection) {
       connection = joinVoiceChannel({
-        channelId: channel.id,
-        guildId: channel.guild.id,
-        adapterCreator: channel.guild.voiceAdapterCreator,
+        channelId: message.member.voice.channel.id,
+        guildId: message.guild.id,
+        adapterCreator: message.guild.voiceAdapterCreator
       });
     }
 
-    player = createAudioPlayer();
-    const resource = createAudioResource("./sound.mp3");
+    player = createAudioPlayer({
+      behaviors: {
+        noSubscriber: NoSubscriberBehavior.Play
+      }
+    });
+
+    const stream = ytdl(args[0], {
+      filter: "audioonly",
+      quality: "highestaudio",
+      highWaterMark: 1 << 25
+    });
+
+    const resource = createAudioResource(stream);
 
     connection.subscribe(player);
     player.play(resource);
 
-    interaction.reply("🎵 Playing music!");
+    message.reply("Playing music 🎵");
+  }
+
+  // ?leave
+  if (command === "leave") {
+    if (connection) {
+      connection.destroy();
+      connection = null;
+      message.reply("Left voice channel ❌");
+    }
   }
 });
 
 client.login(process.env.TOKEN);
-
-const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
-
-(async () => {
-  try {
-    console.log("Registering slash commands...");
-
-    await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: commands }
-    );
-
-    console.log("Slash commands registered");
-  } catch (err) {
-    console.error(err);
-  }
-})();
-Routes.applicationCoconsol
