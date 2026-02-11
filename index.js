@@ -1,3 +1,12 @@
+const {
+  Client,
+  GatewayIntentBits,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ChannelSelectMenuBuilder,
+  ChannelType
+} = require("discord.js");
 require("dotenv").config();
 
 const {
