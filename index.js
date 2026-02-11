@@ -133,4 +133,4 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
     console.error(err);
   }
 })();
-Routes.applicationCommands(process.env.CLIENT_ID)
+Routes.applicationCoconsol
