@@ -35,7 +35,6 @@ const commands = [
     .setDescription("Play music in voice channel")
 ].map(cmd => cmd.toJSON());
 
-const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
 (async () => {
   try {
