@@ -99,15 +99,19 @@ if (!connection) {
       }
     });
 
-    const stream = ytdl(args[0], {
-      filter: "audioonly",
-      quality: "highestaudio",
-      highWaterMark: 1 << 25
-    });
-const resource = createAudioResource(stream, {
-  inputType: StreamType.Arbitrary
+ const stream = ytdl(args[0], {
+  filter: "audioonly",
+  highWaterMark: 1 << 25,
+  requestOptions: {
+    headers: {
+      cookie: "CONSENT=YES+cb"
+    }
+  
+ }
+    const resource = createAudioResource(stream, {
+  inputType: StreamType.Arbitrary,
+  inlineVolume: true
 });
-     }
     
     connection.subscribe(player);
     player.play(resource);
