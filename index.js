@@ -83,8 +83,7 @@ if (!connection) {
     if (!message.member.voice.channel)
       return message.reply("Join a voice channel first!");
 
-    if (!args[0]) return message.reply("Provide a YouTube link }
-if (!connection) {
+    if (!args[0]) return message.reply("Provide a YouTube link!");
   connection = joinVoiceChannel({
     channelId: message.member.voice.channel.id,
     guildId: message.guild.id,
