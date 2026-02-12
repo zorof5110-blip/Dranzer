@@ -108,8 +108,7 @@ if (!connection) {
   
  }
     const resource = createAudioResource(stream, {
-  inputType: StreamType.Arbitrary,
-  inlineVolume: true
+
 });
     
     connection.subscribe(player);
