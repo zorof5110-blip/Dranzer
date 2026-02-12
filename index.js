@@ -19,7 +19,7 @@ const {
   StreamType
 } = require("@discordjs/voice");
 
-const ytdl = require("@distube/ytdl-core");
+const ytdl = require("ytdl-core");
 const ffmpeg = require("ffmpeg-static");
 
 const client = new Client({
@@ -90,7 +90,7 @@ if (!connection) {
     adapterCreator: message.guild.voiceAdapterCreator,
     selfDeaf: false
   });
-    }
+    
     player = createAudioPlayer({
       
       behaviors: {
@@ -100,21 +100,18 @@ if (!connection) {
 
  const stream = ytdl(args[0], {
   filter: "audioonly",
-  highWaterMark: 1 << 25,
-  requestOptions: {
-    headers: {
-      cookie: "CONSENT=YES+cb"
-    }
-  
- }
-    const resource = createAudioResource(stream, {
-
+  quality: "highestaudio",
+  highWaterMark: 1 << 25
 });
     
-    connection.subscribe(player);
-    player.play(resource);
+  
+ 
+     const resource = createAudioResource(stream);
 
-    message.reply("Playing music 🎵");
+connection.subscribe(player);
+player.play(resource);
+
+message.reply("Playing music 🎵");
   }
 
   // ?leave
