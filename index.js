@@ -83,17 +83,17 @@ if (!connection) {
     if (!message.member.voice.channel)
       return message.reply("Join a voice channel first!");
 
-    if (!args[0]) return message.reply("Provide a YouTube link!");
-
-    if (!connection) {
-      connection = joinVoiceChannel({
-        channelId: message.member.voice.channel.id,
-        guildId: message.guild.id,
-        adapterCreator: message.guild.voiceAdapterCreator
-      });
+    if (!args[0]) return message.reply("Provide a YouTube link }
+if (!connection) {
+  connection = joinVoiceChannel({
+    channelId: message.member.voice.channel.id,
+    guildId: message.guild.id,
+    adapterCreator: message.guild.voiceAdapterCreator,
+    selfDeaf: false
+  });
     }
-
     player = createAudioPlayer({
+      
       behaviors: {
         noSubscriber: NoSubscriberBehavior.Play
       }
@@ -121,7 +121,7 @@ if (!connection) {
 
   // ?leave
   if (command === "leave") {
-    if (connection) {
+    if (!connection) {
       connection.destroy();
       connection = null;
       message.reply("Left voice channel ❌");
