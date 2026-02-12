@@ -54,13 +54,16 @@ client.on("messageCreate", async (message) => {
   if (command === "join") {
     if (!message.member.voice.channel)
       return message.reply("Join a voice channel first!");
-
-    connection = joinVoiceChannel({
-      channelId: message.member.voice.channel.id,
-      guildId: message.guild.id,
-      adapterCreator: message.guild.voiceAdapterCreator,
-      selfDeaf: false
-    });
+    
+if (!connection) {
+  connection = joinVoiceChannel({
+    channelId: message.member.voice.channel.id,
+    guildId: message.guild.id,
+    adapterCreator: message.guild.voiceAdapterCreator,
+    selfDeaf: false
+  });
+}
+    
 
     message.reply("Joined and staying 24/7 🔊");
 
@@ -101,10 +104,10 @@ client.on("messageCreate", async (message) => {
       quality: "highestaudio",
       highWaterMark: 1 << 25
     });
-
-   const resource = createAudioResource(stream, {
-  inputType: StreamType.Arbitrary,
+const resource = createAudioResource(stream, {
+  inputType: StreamType.Arbitrary
 });
+     }
     
     connection.subscribe(player);
     player.play(resource);
